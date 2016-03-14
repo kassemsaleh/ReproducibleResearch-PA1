@@ -43,7 +43,7 @@ averages <- aggregate (x = list (steps = data$steps), by = list (interval = data
 ggplot (data = averages, aes(x = interval, y = steps)) + geom_line() + xlab("5-minutes interval") + ylab("average nymber of steps")
 
 ```
-![](images/fig-1.png?raw=true)
+![](images/fig-2.png?raw=true)
 
 ## The 5-minutes interval that on average contains the maximum number of steps
 ```r
@@ -82,7 +82,7 @@ qplot (total.steps, binwidth = 800, xlab = "The total number of steps per day")
 ```
 ## Now recompute the mean and median afer replacing the NA with the mean of 5-minutes interval
 
-![](images/fig-2.png?raw=true)
+![](images/fig-1.png?raw=true)
 
 ```r
 mean (total.steps)
