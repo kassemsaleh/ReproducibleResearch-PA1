@@ -1,0 +1,120 @@
+---
+title: "PA1_template"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Coursera Reproducible Research Course - Peer Assignment 1
+
+## Unziping and loading the data
+```r
+unzip (zipfile = "repdata-data-activity.zip")
+data <- read.csv("activity.csv")
+```
+## Plot the histogram of the total number of steps taken each day
+## using ggplot2
+
+```r
+library ("ggplot2")
+total.steps <- tapply(data$steps, data$date, FUN=sum, na.rm = TRUE)
+qplot (total.steps, binwidth = 800, xlab = "The totlal number or steps per day")
+
+```
+![](images/fig-0.png?raw=true)
+
+## mean and median (with NA values)
+```r
+mean (total.steps, na.rm = TRUE)
+```
+#### [1] 9354.23
+```r
+median (total.steps, na.rm = TRUE)
+```
+#### [1] 10395
+
+## Average daily activity
+
+```r
+averages <- aggregate (x = list (steps = data$steps), by = list (interval = data$interval), FUN = mean, na.rm = TRUE)
+
+ggplot (data = averages, aes(x = interval, y = steps)) + geom_line() + xlab("5-minutes interval") + ylab("average nymber of steps")
+
+```
+![](images/fig-1.png?raw=true)
+
+## The 5-minutes interval that on average contains the maximum number of steps
+```r
+averages[which.max(averages$steps), ]
+```
+####        interval    steps
+#### 104      835       206.1698
+
+## Replace missing data by the mean of that 5-minutes interval
+```r
+missingSteps <- is.na(data$steps)
+table(missingSteps)
+```
+#### missingSteps
+#### FALSE  TRUE 
+#### 15264  2304
+
+```r
+fill.value <- function(steps, interval)
+{ filled <- NA
+  if (!is.na(steps))
+    filled <- c(steps) else
+      filled <- (averages[averages$interval == interval, "steps"])
+  return (filled)      
+}
+
+filled.data <- data
+filled.data$steps <- mapply(fill.value, filled.data$steps, filled.data$interval)
+                    
+total.steps <- tapply (filled.data$steps, filled.data$date, FUN = sum)
+```
+
+## Plot the histogram after replacing the NA values
+```r
+qplot (total.steps, binwidth = 800, xlab = "The total number of steps per day")
+```
+## Now recompute the mean and median afer replacing the NA with the mean of 5-minutes interval
+
+![](images/fig-2.png?raw=true)
+
+```r
+mean (total.steps)
+```
+#### [1] 10766.19
+```r
+median (total.steps)
+```
+#### [1] 10766.19
+
+## activity patterns in weekdays VS weekends
+
+## function to find the date if it is weekday or weekend
+```r
+testday <- function (date) {
+  day <- weekdays(date)
+  day
+  if (day %in% c("Monday", "Tuesday", "wednesday", "Thursday", "Friday"))
+    return ("weekday") 
+  else if (day %in% c("Saturday", "Sunday"))
+    return ("weekend") 
+  else return ("weekend") 
+    ## above done to avoid stopping on invalid date  using stop("invalid date")
+}
+filled.data$date <- as.Date(filled.data$date)
+filled.data$day <- sapply(filled.data$date, FUN = testday)
+```
+## Plot the average number of steps taken on weekdays and weekends separately
+
+```r
+averages <- aggregate (steps ~ interval + day, data = filled.data, mean)
+ggplot(averages, aes(interval, steps)) + geom_line() + facet_grid(day ~ .) + 
+  xlab ("5-minutes interval") + ylab("Number of steps")
+```
+![](images/fig-3.png?raw=true)
